@@ -1,24 +1,29 @@
 const main = async () => {
-  const [owner, randomPerson] = await hre.ethers.getSigners();
-  const waveContractFactory = await hre.ethers.getContractFactory("WavePortal");
-  const waveContract = await waveContractFactory.deploy();
-  await waveContract.deployed();
+  const [owner, referral, referrer1, referrer2] = await hre.ethers.getSigners();
+  const referralContractFactory = await hre.ethers.getContractFactory(
+    "ReferralPortal"
+  );
+  const referralContract = await referralContractFactory.deploy();
+  await referralContract.deployed();
 
-  console.log("Contract deployed to:", waveContract.address);
+  console.log("Contract deployed to:", referralContract.address);
   console.log("Contract deployed by:", owner.address);
 
-  let waveCount;
-  waveCount = await waveContract.getTotalWaves();
+  await referralContract.getReferrals(referral.address);
 
-  let waveTxn = await waveContract.wave();
-  await waveTxn.wait();
+  let referralTxn = await referralContract
+    .connect(referrer1)
+    .addReferral(referral.address);
+  await referralTxn.wait();
 
-  waveCount = await waveContract.getTotalWaves();
+  await referralContract.getReferrals(referral.address);
 
-  waveTxn = await waveContract.connect(randomPerson).wave();
-  await waveTxn.wait();
+  referralTxn = await referralContract
+    .connect(referrer2)
+    .addReferral(referral.address);
+  await referralTxn.wait();
 
-  waveCount = await waveContract.getTotalWaves();
+  await referralContract.getReferrals(referral.address);
 };
 
 const runMain = async () => {
