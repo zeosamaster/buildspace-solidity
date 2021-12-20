@@ -2,22 +2,34 @@
 
 pragma solidity ^0.8.0;
 
-import "hardhat/console.sol";
-
 contract ReferralPortal {
-    mapping(address => address[]) private referrals;
+    mapping(address => Referral[]) private referrals;
 
-    function addReferral(address referral) public {
-        referrals[referral].push(msg.sender);
-        console.log("%s got a new referral from %s!", referral, msg.sender);
+    event NewReferral(address indexed from, address indexed to, string skill);
+
+    struct Referral {
+        address referrer;
+        string skill;
+        uint256 timestamp;
     }
 
-    function getReferrals(address referral) public view returns (uint256) {
-        console.log(
-            "%s has a total of %d referrals!",
-            referral,
-            referrals[referral].length
+    function addReferral(address _referral, string memory _skill) public {
+        referrals[_referral].push(
+            Referral({
+                referrer: msg.sender,
+                skill: _skill,
+                timestamp: block.timestamp
+            })
         );
-        return referrals[referral].length;
+
+        emit NewReferral(msg.sender, _referral, _skill);
+    }
+
+    function getReferrals(address _referral)
+        public
+        view
+        returns (Referral[] memory)
+    {
+        return referrals[_referral];
     }
 }
