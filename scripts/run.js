@@ -14,17 +14,28 @@ const logReferrals = async (referralContract, address) => {
   console.log("Current skills are", JSON.stringify(skills));
 };
 
+const logContractBalance = async (address) => {
+  const contractBalance = await hre.ethers.provider.getBalance(address);
+  console.log(
+    "Contract balance:",
+    hre.ethers.utils.formatEther(contractBalance)
+  );
+};
+
 const main = async () => {
   const [owner, referral, referrer1, referrer2] = await hre.ethers.getSigners();
   const referralContractFactory = await hre.ethers.getContractFactory(
     "ReferralPortal"
   );
-  const referralContract = await referralContractFactory.deploy();
+  const referralContract = await referralContractFactory.deploy({
+    value: hre.ethers.utils.parseEther("0.1"),
+  });
   await referralContract.deployed();
 
   console.log("Contract deployed to:", referralContract.address);
   console.log("Contract deployed by:", owner.address);
 
+  await logContractBalance(referralContract.address);
   await logReferrals(referralContract, referral.address);
 
   let referralTxn = await referralContract
@@ -32,6 +43,7 @@ const main = async () => {
     .addReferral(referral.address, TEST_SKILL_1);
   await referralTxn.wait();
 
+  await logContractBalance(referralContract.address);
   await logReferrals(referralContract, referral.address);
 
   referralTxn = await referralContract
@@ -39,6 +51,7 @@ const main = async () => {
     .addReferral(referral.address, TEST_SKILL_1);
   await referralTxn.wait();
 
+  await logContractBalance(referralContract.address);
   await logReferrals(referralContract, referral.address);
 
   referralTxn = await referralContract
@@ -46,6 +59,7 @@ const main = async () => {
     .addReferral(referral.address, TEST_SKILL_2);
   await referralTxn.wait();
 
+  await logContractBalance(referralContract.address);
   await logReferrals(referralContract, referral.address);
 };
 
