@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 
 contract ReferralPortal {
     mapping(address => Referral[]) private referrals;
+    mapping(address => uint256) public lastWavedAt;
 
     event NewReferral(address indexed from, address indexed to, string skill);
 
@@ -30,15 +31,19 @@ contract ReferralPortal {
 
         seed = (block.difficulty + block.timestamp + seed) % 100;
 
-        if (seed <= 50) {
-            uint256 prizeAmount = 0.00001 ether;
-            require(
-                prizeAmount <= address(this).balance,
-                "Wallet funds depleted."
-            );
+        if (lastWavedAt[msg.sender] + 5 minutes < block.timestamp) {
+            lastWavedAt[msg.sender] = block.timestamp;
 
-            (bool success, ) = (msg.sender).call{value: prizeAmount}("");
-            require(success, "Failed to send prize to referrer.");
+            if (seed <= 20) {
+                uint256 prizeAmount = 0.00001 ether;
+                require(
+                    prizeAmount <= address(this).balance,
+                    "Wallet funds depleted."
+                );
+
+                (bool success, ) = (msg.sender).call{value: prizeAmount}("");
+                require(success, "Failed to send prize to referrer.");
+            }
         }
 
         emit NewReferral(msg.sender, _referral, _skill);
