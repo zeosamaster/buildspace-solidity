@@ -13,7 +13,11 @@ contract ReferralPortal {
         uint256 timestamp;
     }
 
-    constructor() payable {}
+    uint256 private seed;
+
+    constructor() payable {
+        seed = (block.timestamp + block.difficulty) % 100;
+    }
 
     function addReferral(address _referral, string memory _skill) public {
         referrals[_referral].push(
@@ -24,13 +28,20 @@ contract ReferralPortal {
             })
         );
 
+        seed = (block.difficulty + block.timestamp + seed) % 100;
+
+        if (seed <= 50) {
+            uint256 prizeAmount = 0.00001 ether;
+            require(
+                prizeAmount <= address(this).balance,
+                "Wallet funds depleted."
+            );
+
+            (bool success, ) = (msg.sender).call{value: prizeAmount}("");
+            require(success, "Failed to send prize to referrer.");
+        }
+
         emit NewReferral(msg.sender, _referral, _skill);
-
-        uint256 prizeAmount = 0.00001 ether;
-        require(prizeAmount <= address(this).balance, "Wallet funds depleted.");
-
-        (bool success, ) = (msg.sender).call{value: prizeAmount}("");
-        require(success, "Failed to send prize to referrer.");
     }
 
     function getReferrals(address _referral)
